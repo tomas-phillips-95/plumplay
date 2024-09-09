@@ -1,0 +1,32 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:12
+    restart: always
+    environment:
+      - POSTGRES_USER=medplum
+      - POSTGRES_PASSWORD=medplum
+    volumes:
+      - ./postgres/postgres.conf:/usr/local/etc/postgres/postgres.conf
+      - ./postgres/:/docker-entrypoint-initdb.d/
+    command: postgres -c config_file=/usr/local/etc/postgres/postgres.conf
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    restart: always
+    command: redis-server --requirepass medplum
+    ports:
+      - "6379:6379"
+
+  medplum-server:
+    image: medplum/medplum-server:latest
+    restart: always
+    ports:
+      - "8103:8103"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./medplum.config.json:/usr/src/medplum/packages/server/medplum.config.json
